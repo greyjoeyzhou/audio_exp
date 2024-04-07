@@ -9,4 +9,5 @@ name = "audio_exp"
 crate-type = ["cdylib"]
 
 [dependencies]
+hound = "3.5.1"
 pyo3 = "0.19.0"

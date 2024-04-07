@@ -17,6 +17,7 @@ build-backend = "maturin"
 managed = true
 dev-dependencies = [
     "pip>=24.0",
+    "ipython>=8.23.0",
 ]
 
 [tool.maturin]
