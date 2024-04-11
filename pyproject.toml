@@ -2,10 +2,10 @@
 name = "audio-exp"
 version = "0.1.0"
 description = "Add your description here"
-authors = [
-    { name = "joeyzhou1984", email = "joeyzhou1984@gmail.com" }
+authors = [{ name = "joeyzhou1984", email = "joeyzhou1984@gmail.com" }]
+dependencies = [
+    "numpy>=1.26.4",
 ]
-dependencies = []
 readme = "README.md"
 requires-python = ">= 3.8"
 
@@ -15,12 +15,8 @@ build-backend = "maturin"
 
 [tool.rye]
 managed = true
-dev-dependencies = [
-    "pip>=24.0",
-    "ipython>=8.23.0",
-]
+dev-dependencies = ["pip>=24.0", "ipython>=8.23.0"]
 
 [tool.maturin]
 python-source = "python"
 module-name = "audio_exp._lowlevel"
-features = ["pyo3/extension-module"]
