@@ -11,3 +11,16 @@
     - run `cargo add <dep>` to install cargo dependencies
     - run `maturin develop --skip-install` to compile rust code to a python extension and make it available in the virtualenv
     - run `rye build` to build wheel
+
+## TODOs
+
+- get simple usage sample for symphonia
+
+- experiment and decide how to do logging
+- expriment more ndarray usage in rust side
+- more usage of rust generics
+
+- pyo3 to bridge rust enum or struct to a python class
+- more memory manamgent and lifetime management in rust side
+
+- more usage samples for hound and symphonia
