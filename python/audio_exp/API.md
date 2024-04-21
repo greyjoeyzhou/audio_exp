@@ -1,118 +1,114 @@
-# API Documentation
+# AnyAudio API Documentation
 
-## AudioSegment()
+## wave format
 
-`AudioSegment` objects are immutable, and support a number of operators.
+The WAV audio file format is a binary format that exhibits the following structure on disk:
 
-Any operations that combine multiple `AudioSegment` objects in *any* way will first ensure that they have the same number of channels, frame rate, sample rate, bit depth, etc. When these things do not match, the lower quality sound is modified to match the quality of the higher quality sound so that quality is not lost: mono is converted to stereo, bit depth and frame rate/sample rate are increased as needed. 
+[![The Structure of a WAV File](https://files.realpython.com/media/wavstructure2.d97f203196ef.png)](https://files.realpython.com/media/wavstructure2.d97f203196ef.png)The Structure of a WAV File
+
+As you can see, a WAV file begins with a **header** comprised of metadata, which describes how to interpret the sequence of **audio frames** that follow. Each frame consists of **channels** that correspond to loudspeakers, such as left and right or front and rear.
+
+## Open / AudioReader
+
+### wave like read/write
 
 ```python
-from pydub import AudioSegment
-sound1 = AudioSegment.from_file("/path/to/sound.wav", format="wav")
-sound2 = AudioSegment.from_file("/path/to/another_sound.wav", format="wav")
+# our tmp name
+import anyaudio
 
-# sound1 6 dB louder, then 3.5 dB quieter
-louder = sound1 + 6
-quieter = sound1 - 3.5
+with anyaudio.open("short.wav") as wav_file:
+    # AudioSegment object
+    audio_segment = wav_file.read()
+    
+    # _wave_params = namedtuple('_wave_params', 'channels frame_rate sample_width')
+    metadata = wav_file.getparams()
+   
+    # read raw data as array/ndarray/bytes
+    frames = wav_file.readframes(n=100)
 
-# sound1, with sound2 appended
-combined = sound1 + sound2
-
-# sound1 repeated 3 times
-repeated = sound1 * 3
-
-# duration
-duration_in_milliseconds = len(sound1)
-
-# first 5 seconds of sound1
-beginning = sound1[:5000]
-
-# Advanced usage, if you have raw audio data:
-sound = AudioSegment(
-    # raw audio data (bytes)
-    data=b'…',
-    # 2 byte (16 bit) samples
-    sample_width=2,
-    # 44.1 kHz frame rate
-    frame_rate=44100,
-)
+with anyaudio.open("output.wav", mode="wb") as wav_file:
+    wav_file.writeframes(frames)
 ```
 
-### AudioSegment(data=b'...')
-
-`init` function, init AudioSegment from raw data frames without headers.
-
-### AudioSegment(…).from_file()
-
-Open an audio file as an `AudioSegment` instance and return it. there are also a number of wrappers provided for convenience, but you should probably just use this directly.
-
-### AudioSegment(…).export()
-
-Write the `AudioSegment` object to a file – returns a file handle of the output file (you don't have to do anything with it, though).
-
-### AudioSegment(…).apply_gain(`gain`) /  operator +
-
-Change the amplitude (generally, loudness) of the `AudioSegment`. Gain is specified in dB. This method is used internally by the `+` operator.
-
-### AudioSegment(…).append()
-
-Returns a new `AudioSegment`, created by appending another `AudioSegment` to this one (i.e., adding it to the end), Optionally using a crossfade. `AudioSegment(…).append()` is used internally when adding `AudioSegment` objects together with the `+` operator.
-
-By default a 100ms (0.1 second) crossfade is used to eliminate pops and crackles.
+### pydub like read/write
 
 ```python
-from pydub import AudioSegment
-sound1 = AudioSegment.from_file("sound1.wav")
-sound2 = AudioSegment.from_file("sound2.wav")
+from anyaudio import AudioSegment
 
-# default 100 ms crossfade
-combined = sound1.append(sound2)
+song = AudioSegment.from_file("short.wav")
 
-# 5000 ms crossfade
-combined_with_5_sec_crossfade = sound1.append(sound2, crossfade=5000)
+ten_minutes = 10 * 60 * 1000
+first_10_minutes = song[:ten_minutes]
 
-# no crossfade
-no_crossfade1 = sound1.append(sound2, crossfade=0)
+first_10_minutes.export("short_10.wav", format="wav")
 
-# no crossfade
-no_crossfade2 = sound1 + sound2
+```
+
+### scipy like
+
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.read.html
+
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.write.html
+
+`scipy` provide functions for read/write.
+
+probably pass this choice.
+
+read:
+
+```python
+from scipy.io import wavfile
+samplerate, data = wavfile.read(wav_fname)
+```
+
+write:
+
+```python
+from scipy.io.wavfile import write
+import numpy as np
+samplerate = 44100; fs = 100
+t = np.linspace(0., 1., samplerate)
+amplitude = np.iinfo(np.int16).max
+data = amplitude * np.sin(2. * np.pi * fs * t)
+write("example.wav", samplerate, data.astype(np.int16))
 ```
 
 
 
+## AudioSegment
 
+### `__init__()`
 
+````python
+__init__(self, data=None, *args, **kwargs)
+```
+Args:
+    data (array.array or bytes or np.array): The raw audio data without headers.
+    
+    channels (int): The number of audio channels.
+    sample_width (int): The sample width in bytes.
+    frame_rate (int): The frame rate in Hz.
+```
+````
 
+`wave` in python containing these metadata: `_wave_params(nchannels=1, sampwidth=2, framerate=16000, nframes=2648832, comptype='NONE', compname='not compressed')`
 
-### AudioSegment.empty()
+### from_file()
 
-Creates a zero-duration `AudioSegment`.
+keep this method to read the whole audio into an `AudioSegment`
 
-```python
-from pydub import AudioSegment
-empty = AudioSegment.empty()
+More advanced read can use `anyaudio.open` like:
 
-len(empty) == 0
+```
 ```
 
-### AudioSegment.silent()
-
-Creates a silent audiosegment, which can be used as a placeholder, spacer, or as a canvas to overlay other sounds on top of.
-
-```python
-from pydub import AudioSegment
-
-ten_second_silence = AudioSegment.silent(duration=10000)
-```
-
-### AudioSegment(…).overlay()
-
-Overlays an `AudioSegment` onto this one. In the resulting `AudioSegment` they will play simultaneously. If the overlaid `AudioSegment` is longer than this one, the result will be truncated (so the end of the overlaid sound will be cut off). The result is always the same length as this `AudioSegment` even when using the `loop`, and `times` keyword arguments.
-
-Since `AudioSegment` objects are immutable, you can get around this by overlaying the shorter sound on the longer one, or by creating a silent `AudioSegment` with the appropriate duration, and overlaying both sounds on to that one.
 
 
 
-### AudioSegment(…).fade()
 
-A more general (more flexible) fade method. You may specify `start` and `end`, or one of the two along with duration (e.g., `start` and `duration`).
+### export()
+
+keep this method to write the whole `AudioSegment` audio on disk.
+
+
+
