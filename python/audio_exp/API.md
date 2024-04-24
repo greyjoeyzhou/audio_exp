@@ -135,5 +135,52 @@ More advanced read can use `anyaudio.open`
 
 keep this method to write the whole `AudioSegment` audio on disk.
 
+### `__add__()`
+
+ `+` operator
+
+- if add `AudioSegment` objects, call append();
+
+- if add `float`, call apply_gain()
+
+```python
+sound1 = AudioSegment.from_file("/path/to/sound.wav", format="wav")
+sound2 = AudioSegment.from_file("/path/to/another_sound.wav", format="wav")
+
+# sound1 6 dB louder, then 3.5 dB quieter
+louder = sound1 + 6 # equivalent to sound1.apply_gain(6)
+quieter = sound1 - 3.5
+
+# sound1, with sound2 appended
+combined = sound1 + sound2 # equivalent to sound1.append(sound2)
+```
+
+#### append()
+
+Returns a new `AudioSegment`, created by appending another `AudioSegment` to this one (i.e., adding it to the end), Optionally using a crossfade. 
+
+`AudioSegment(…).append()` is used internally when adding `AudioSegment` objects together with the `+` operator.
+
+#### apply_gain()
+
+Change the amplitude (generally, loudness) of the `AudioSegment`. Gain is specified in dB. 
+
+This method is used internally by the `+` operator.
+
+### `__sub__()`
+
+ `-` operator
+
+call apply_gain() to reduce amplitude , cannot be used to sub another `AudioSegment`.
+
+```python
+sound1 = AudioSegment.from_file("/path/to/sound.wav", format="wav")
+
+# sound1 3.5 dB quieter
+quieter = sound1 - 3.5 # equivalent to sound1.apply_gain(-3.5)
+```
+
+
+
 
 
