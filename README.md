@@ -14,13 +14,14 @@
 
 ## TODOs
 
-- get simple usage sample for symphonia
-
-- experiment and decide how to do logging
+- pyo3 to bridge rust enum or struct to a python class
 - expriment more ndarray usage in rust side
 - more usage of rust generics
 
-- pyo3 to bridge rust enum or struct to a python class
+- get simple usage sample for symphonia
+
+- experiment and decide how to do logging
 - more memory manamgent and lifetime management in rust side
 
 - more usage samples for hound and symphonia
+- more usage samples for making use of candle to provision some AI based audio processing tools
