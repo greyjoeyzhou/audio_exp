@@ -13,6 +13,7 @@ hound = "3.5.1"
 log = "0.4.21"
 numpy = "0.21.0"
 pyo3 = "0.21.1"
+symphonia = { version = "0.5.4", features = ["mp3"] }
 
 [features]
 extension-module = ["pyo3/extension-module"]
