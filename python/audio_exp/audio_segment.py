@@ -5,7 +5,10 @@ import numpy as np
 
 from enum import IntEnum
 
-import audioop
+try:
+    import audioop
+except ImportError:
+    import pyaudioop as audioop
 
 
 def db_to_float(db, using_amplitude=True):
@@ -223,15 +226,17 @@ class AudioSegment:
             return self
 
         if channels == 2 and self.channels == 1:
+            # TODO: reimplementation of ratecv for ndarray
             fn = audioop.tostereo
             frame_width = self.frame_width * 2
             fac = 1
-            converted = fn(self._data, self.sample_width, fac, fac)
+            converted = fn(self._data.tobytes(), self.sample_width, fac, fac)
         elif channels == 1 and self.channels == 2:
+            # TODO: reimplementation of ratecv for ndarray
             fn = audioop.tomono
             frame_width = self.frame_width // 2
             fac = 0.5
-            converted = fn(self._data, self.sample_width, fac, fac)
+            converted = fn(self._data.tobytes(), self.sample_width, fac, fac)
         elif channels == 1:
             raise NotImplemented
             # TODO
@@ -265,7 +270,8 @@ class AudioSegment:
         frame_width = self.channels * sample_width
 
         return self._spawn(
-            audioop.lin2lin(self._data, self.sample_width, sample_width),
+            # TODO: reimplementation of ratecv for ndarray
+            audioop.lin2lin(self._data.tobytes(), self.sample_width, sample_width),
             overrides={"sample_width": sample_width, "frame_width": frame_width},
         )
 
@@ -274,8 +280,9 @@ class AudioSegment:
             return self
 
         if self._data:
+            # TODO: reimplementation of ratecv for ndarray
             converted, _ = audioop.ratecv(
-                self._data,
+                self._data.tobytes(),
                 self.sample_width,
                 self.channels,
                 self.frame_rate,
