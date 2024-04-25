@@ -10,18 +10,18 @@ As you can see, a WAV file begins with a **header** comprised of metadata, which
 
 Python’s `wave` module supports only the **Pulse-Code Modulation (PCM)** encoding.
 
-Moreover, Python is limited to **integer data types**, while PCM doesn’t stop there, defining several bit depths to choose from, including [floating-point](https://realpython.com/python-numbers/#floating-point-numbers) ones:
-
-| Data Type      | Signed | Bits | Min Value          | Max Value         |
-| -------------- | ------ | ---- | ------------------ | ----------------- |
-| Integer        | No     | 8    | 0                  | 255               |
-| Integer        | Yes    | 16   | -32,768            | 32,767            |
-| Integer        | Yes    | 24   | -8,388,608         | 8,388,607         |
-| Integer        | Yes    | 32   | -2,147,483,648     | 2,147,483,647     |
-| Floating-Point | Yes    | 32   | ≈ -3.40282 × 1038  | ≈ 3.40282 × 1038  |
-| Floating-Point | Yes    | 64   | ≈ -1.79769 × 10308 | ≈ 1.79769 × 10308 |
+Moreover, Python is limited to **integer data types**, while PCM doesn’t stop there, defining several bit depths to choose from, including [floating-point](https://realpython.com/python-numbers/#floating-point-numbers) ones.
 
 The 8-bit, 16-bit, and 32-bit integers have standard representations in the [C programming language](https://realpython.com/c-for-python-programmers/), which the default [CPython](https://realpython.com/cpython-source-code-guide/) interpreter builds on. However, the 24-bit integer is an outlier without a corresponding built-in **C data type**. 
+
+| WAV format PCM        | Signed | Bytes | [Type Code](https://www.educative.io/answers/what-are-type-codes-in-python) | C++ Type                  | Python Type | Numpy [dtype](https://numpy.org/doc/stable/reference/arrays.dtypes.html) | Rust Type | Min Value          | Max Value         |
+| --------------------- | ------ | ----- | ------------------------------------------------------------ | ------------------------- | ----------- | ------------------------------------------------------------ | --------- | ------------------ | ----------------- |
+| 8-bit integer         | No     | 1     | ‘B’                                                          | unsigned char             | int         | u1 / ubyte / uint8                                           |           | 0                  | 255               |
+| 16-bit integer        | Yes    | 2     | ‘h’                                                          | signed short / signed int | int         | i2 / short / int16                                           |           | -32,768            | 32,767            |
+| 24-bit integer        | Yes    | 3     | NA                                                           | NA                        | NA          | i3 / NA                                                      |           | -8,388,608         | 8,388,607         |
+| 32-bit integer        | Yes    | 4     | 'i'                                                          | signed long               | int         | i4 / intc / int32                                            |           | -2,147,483,648     | 2,147,483,647     |
+| 32-bit floating-point | Yes    | 4     | ‘f’                                                          | float                     | float       | f4 / single / float32                                        |           | ≈ -3.40282 × 1038  | ≈ 3.40282 × 1038  |
+| 64-bit floating-point | Yes    | 8     | ‘d’                                                          | double                    | float       | f8 / double / float64                                        |           | ≈ -1.79769 × 10308 | ≈ 1.79769 × 10308 |
 
 The `wave` module only supports four integer-based, uncompressed **PCM encoding** bit depths:
 
@@ -29,6 +29,15 @@ The `wave` module only supports four integer-based, uncompressed **PCM encoding*
 - 16-bit signed integer
 - 24-bit signed integer
 - 32-bit signed integer
+
+| WAV format PCM        | Signed | Bytes | pydub   | [wave](https://docs.python.org/3/library/wave.html) | scipy [read](https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.read.html) | scipy [write](https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.write.html) |
+| --------------------- | ------ | ----- | ------- | --------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 8-bit integer PCM     | No     | 1     | yes     | yes                                                 | yes                                                          | yes                                                          |
+| 16-bit integer        | Yes    | 2     | yes     | yes                                                 | yes                                                          | yes                                                          |
+| 24-bit integer        | Yes    | 3     | yes     | yes                                                 | yes                                                          | no                                                           |
+| 32-bit integer        | Yes    | 4     | yes     | yes                                                 | yes                                                          | yes                                                          |
+| 32-bit floating-point | Yes    | 4     | unknown | no                                                  | yes                                                          | yes                                                          |
+| 64-bit floating-point | Yes    | 8     | unknown | no                                                  | no                                                           | no                                                           |
 
 The underlying **audio frames** get exposed to you as an unprocessed [`bytes`](https://realpython.com/python-strings/#bytes-objects) instance, which is a really long sequence of **unsigned byte** values. 
 
