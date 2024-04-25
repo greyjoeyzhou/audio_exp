@@ -306,22 +306,21 @@ import unittest
 class AudioSegmentTest(unittest.TestCase):
     # def test_from_file(self):
     #     # Test if AudioSegment can be created from a file
-    #     file_path = "/path/to/audio/file.wav"
+    #     file_path = "./sounds/8000_pcm08_mono.wav"
     #     audio = AudioSegment.from_file(file_path)
     #     self.assertIsInstance(audio, AudioSegment)
-    #     self.assertIsNotNone(audio.data)
-    #     self.assertEqual(audio.channels, 2)
-    #     self.assertEqual(audio.sample_width, 2)
-    #     self.assertEqual(audio.frame_rate, 44100)
+    #     self.assertIsNotNone(audio._data)
+    #     self.assertEqual(audio.channels, 1)
+    #     self.assertEqual(audio.sample_width, 1)
+    #     self.assertEqual(audio.frame_rate, 8000)
 
     # def test_export(self):
     #     # Test if AudioSegment can be exported to a file
     #     audio = AudioSegment(
     #         data=b"\x00\x01\x02\x03", channels=1, sample_width=1, frame_rate=8000
     #     )
-    #     output_file_path = "/path/to/output/file.wav"
+    #     output_file_path = "./output.wav"
     #     audio.export(output_file_path)
-    #     # Assert that the output file exists and has the correct data
 
     def test_add_append(self):
         # Test addition of two AudioSegments
