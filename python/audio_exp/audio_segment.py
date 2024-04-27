@@ -10,6 +10,8 @@ try:
 except ImportError:
     import pyaudioop as audioop
 
+# from audio_exp._lowlevel import read_wave_file_np
+
 
 def db_to_float(db, using_amplitude=True):
     """
