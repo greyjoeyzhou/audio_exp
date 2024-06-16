@@ -13,3 +13,6 @@ target/
 
 # rust / maturin
 *.so
+
+# macOS
+.DS_Store
