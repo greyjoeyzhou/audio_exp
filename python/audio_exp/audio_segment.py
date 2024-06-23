@@ -8,9 +8,11 @@ from enum import IntEnum
 try:
     import audioop
 except ImportError:
-    import pyaudioop as audioop
+    # py3.13+ would not have audioop
+    from legacy_compatible import pyaudioop as audioop
 
-# from audio_exp._lowlevel import read_wave_file_np
+# from audio_exp._lowlevel import read_wavefile_np
+from audio_exp import read_wav_file, read_wav_file_np, read_wav_file_metadata
 
 
 def db_to_float(db, using_amplitude=True):
