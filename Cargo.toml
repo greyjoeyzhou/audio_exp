@@ -12,7 +12,9 @@ crate-type = ["cdylib"]
 hound = "3.5.1"
 log = "0.4.21"
 numpy = "0.21.0"
-pyo3 = "0.21.1"
+# based on https://pyo3.rs/v0.21.2/migration#migrating-from-older-pyo3-versions to silience warnings
+# TODO follow the instructions to update to 0.21+ style
+pyo3 = { version = "0.21.1", features = ["gil-refs"] }
 symphonia = { version = "0.5.4", features = ["mp3"] }
 
 [features]
