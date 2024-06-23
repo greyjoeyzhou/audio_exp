@@ -108,23 +108,22 @@ class AudioSegment:
         self._data = data
 
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, start_time=0):
         # read audio data from a file into AudioSegment object
-        # Tmperarily use wave module to read audio data
+        # use `read_wav_file_metadata` from `lib.rs` to read audio metadata
+        # use `read_wav_file_np` from `lib.rs` to read audio frames
 
-        with wave.open(file_path) as wav_file:
-            metadata = wav_file.getparams()
+        metadata = read_wav_file_metadata(file_path)
+        sample_width = metadata.bits_per_sample // 8
 
-            # the wave module merely returns the raw bytes
-            # without providing any help in their interpretation.
-            # temporarily read all frames
-            frames = wav_file.readframes(metadata.nframes)
+        # TODO: support read frames by nframes
+        frames = read_wav_file_np(file_path, start_time)
 
         obj = cls(
             data=frames,
-            sample_width=metadata.sampwidth,
-            frame_rate=metadata.framerate,
-            channels=metadata.nchannels,
+            sample_width=sample_width,
+            frame_rate=metadata.sample_rate,
+            channels=metadata.channels,
         )
         return obj
 
