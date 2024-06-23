@@ -81,10 +81,7 @@ fn read_wav_file_metadata(file_path: &str) -> Result<WavFileMeta, hound::Error> 
 
 #[pyfunction(name = "read_wav_file_metadata")]
 fn py_read_wav_file_metadata(file_path: &str) -> PyResult<WavFileMeta> {
-    match read_wav_file_metadata(file_path) {
-        Ok(meta) => Ok(meta),
-        Err(e) => Err(PyErr::new::<PyValueError, _>(format!("{:?}", e))),
-    }
+    Ok(read_wav_file_metadata(file_path).unwrap())
 }
 
 #[pyfunction]
