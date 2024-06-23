@@ -5,6 +5,7 @@ use log::info;
 use hound;
 use numpy::{IntoPyArray, PyArray1};
 use pyo3::prelude::*;
+//use symphonia::core::sample;
 
 #[pyclass]
 struct WavFileMeta {
@@ -62,8 +63,7 @@ impl WavFileMeta {
     }
 }
 
-#[pyfunction(name = "read_wav_file_metadata")]
-fn read_wav_file_metadata(file_path: &str) -> PyResult<WavFileMeta> {
+fn read_wav_file_metadata(file_path: &str) -> Result<WavFileMeta, hound::Error> {
     let reader = hound::WavReader::open(file_path).unwrap();
     let duration = reader.duration();
     let length = reader.len();
@@ -79,6 +79,14 @@ fn read_wav_file_metadata(file_path: &str) -> PyResult<WavFileMeta> {
     })
 }
 
+#[pyfunction(name = "read_wav_file_metadata")]
+fn py_read_wav_file_metadata(file_path: &str) -> PyResult<WavFileMeta> {
+    match read_wav_file_metadata(file_path) {
+        Ok(meta) => Ok(meta),
+        Err(e) => Err(PyErr::new::<PyValueError, _>(format!("{:?}", e))),
+    }
+}
+
 #[pyfunction]
 fn read_wav_file_np<'py>(
     py: Python<'py>,
@@ -90,6 +98,7 @@ fn read_wav_file_np<'py>(
     info!("reader created");
     let duration = reader.duration();
     let sample_rate = reader.spec().sample_rate;
+    let channel = reader.spec().channels;
     let starting_sample = starting_time_ms / 1000 * sample_rate;
     if starting_sample > duration {
         Err(PyErr::new::<PyValueError, _>(
@@ -97,15 +106,85 @@ fn read_wav_file_np<'py>(
         ))
     } else {
         reader.seek(starting_sample).unwrap();
-        let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
-        Ok(samples.into_pyarray_bound(py))
+        match channel {
+            1 => {
+                let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
+                Ok(samples.into_pyarray_bound(py))
+            }
+            2 => {
+                // let samples: Vec<i16> = reader.samples::<i16, i16>().map(|s| s.unwrap()).collect();
+
+                let samples1: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
+                Ok(PyArray1::from_vec_bound(py, samples1))
+                //Ok(samples1.into_pyarray_bound(py))
+            }
+            _ => Err(PyErr::new::<PyValueError, _>(
+                "Only mono and stereo channels are supported",
+            )),
+        }
     }
 }
 
-/// A Python module implemented in Rust.
+fn read_wav_file(file_path: &str) -> Result<Vec<i16>, hound::Error> {
+    info!("Reading WAV file: {}", file_path);
+    let mut reader = hound::WavReader::open(file_path).unwrap();
+    info!("reader created");
+    let duration = reader.duration();
+    let sample_rate = reader.spec().sample_rate;
+    let channel = reader.spec().channels;
+    let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
+    info!("{:?}, {:?}, {:?}", channel, duration, sample_rate);
+    Ok(samples)
+}
+
 #[pymodule]
 fn _lowlevel(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(read_wav_file_np, m)?)?;
-    m.add_function(wrap_pyfunction!(read_wav_file_metadata, m)?)?;
+    m.add_function(wrap_pyfunction!(py_read_wav_file_metadata, m)?)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{read_wav_file, read_wav_file_metadata};
+
+    #[test]
+    fn test_read_wav_file() {
+        let file_path = "./python/tests/sounds/StarWars3.wav";
+        let sample = read_wav_file(file_path);
+        assert_eq!(sample.is_ok(), true);
+
+        let file_path = "./python/tests/sounds/44100_pcm16_stereo.wav";
+        let tmeta = read_wav_file_metadata(file_path).unwrap();
+        let sample = read_wav_file(file_path);
+        assert_eq!(sample.is_ok(), true);
+        match sample {
+            Ok(samples) => {
+                assert_eq!(
+                    samples.len(),
+                    (tmeta.duration as usize) * (tmeta.channels as usize)
+                );
+            }
+            Err(_) => {
+                assert_eq!(true, false);
+            }
+        }
+    }
+
+    #[test]
+    fn test_read_wav_file_metadata() {
+        let file_path = "./python/tests/sounds/44100_pcm16_stereo.wav";
+        let tmeta = read_wav_file_metadata(file_path).unwrap();
+
+        assert_eq!(tmeta.bits_per_sample, 16);
+        assert_eq!(tmeta.channels, 2);
+        assert_eq!(tmeta.sample_rate, 44100);
+
+        let file_path = "./python/tests/sounds/8000_pcm32_surround.wav";
+        let tmeta = read_wav_file_metadata(file_path).unwrap();
+
+        assert_eq!(tmeta.bits_per_sample, 32);
+        assert_eq!(tmeta.channels, 3);
+        assert_eq!(tmeta.sample_rate, 8000);
+    }
 }
