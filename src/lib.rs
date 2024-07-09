@@ -134,6 +134,42 @@ fn read_wav_file(file_path: &str) -> Result<Vec<i16>, hound::Error> {
     Ok(samples)
 }
 
+#[pyfunction]
+fn write_wav_file_np<'py>(
+    py: Python<'py>,
+    file_path: &str,
+    spec: &WavFileMeta,
+    samples: &Bound<'py, PyArray1<i16>>,
+){
+    info!("Writing WAV file: {}", file_path);
+    let sample_format = if spec.sample_format_int {
+        hound::SampleFormat::Int
+    } else {
+        hound::SampleFormat::Float
+    };
+    let duration = spec.duration;
+    let length = spec.length;
+
+    let wavspec = hound::WavSpec {
+        bits_per_sample: spec.bits_per_sample,
+        channels: spec.channels,
+        sample_rate: spec.sample_rate,
+        sample_format: sample_format,
+    };
+    let mut writer = hound::WavWriter::create(file_path, wavspec).unwrap();
+    info!("writer created");
+
+    // probably use duration instead of length for multi channels
+    // length = duration * channels.
+    for j in 0..duration {
+        // error: mismatched types
+        writer.write_sample(samples[j] as i16).unwrap();
+    }
+    writer.finalize().unwrap();
+    info!("writer closed");
+}
+
+/// A Python module implemented in Rust.
 #[pymodule]
 fn _lowlevel(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(read_wav_file_np, m)?)?;
