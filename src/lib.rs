@@ -3,7 +3,7 @@ use pyo3::exceptions::PyValueError;
 use log::info;
 
 use hound;
-use numpy::{IntoPyArray, PyArray1};
+use numpy::{IntoPyArray, PyArray1, PyArrayMethods};
 use pyo3::prelude::*;
 //use symphonia::core::sample;
 
@@ -140,7 +140,7 @@ fn write_wav_file_np<'py>(
     file_path: &str,
     spec: &WavFileMeta,
     samples: &Bound<'py, PyArray1<i16>>,
-){
+) {
     info!("Writing WAV file: {}", file_path);
     let sample_format = if spec.sample_format_int {
         hound::SampleFormat::Int
@@ -159,12 +159,12 @@ fn write_wav_file_np<'py>(
     let mut writer = hound::WavWriter::create(file_path, wavspec).unwrap();
     info!("writer created");
 
-    // probably use duration instead of length for multi channels
-    // length = duration * channels.
-    for j in 0..duration {
-        // error: mismatched types
-        writer.write_sample(samples[j] as i16).unwrap();
-    }
+    // NOTE: do-able but let us see how to do this without goiong unsafe
+    let samples_array = unsafe { samples.as_array() };
+    samples_array.iter().for_each(|s| {
+        writer.write_sample(*s).unwrap();
+    });
+
     writer.finalize().unwrap();
     info!("writer closed");
 }
