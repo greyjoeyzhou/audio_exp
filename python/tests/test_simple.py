@@ -3,7 +3,7 @@ import os
 from audio_exp.audio_segment import (
     AudioSegment,
     read_wav_file_metadata,
-    read_wav_file_np,
+    read_wav_file,
 )
 
 from .common import TEST_DIR
@@ -21,7 +21,7 @@ def test_read_wav_file_metadata():
 def test_read_wav_file_single_channel():
     file_path = os.path.join(TEST_DIR, "StarWars3.wav")
     as1 = AudioSegment.from_file(file_path)
-    as2 = read_wav_file_np(file_path, 0)
+    as2 = read_wav_file(file_path, 0)
     assert as2 is not None
     assert len(as1._data) == len(as2)
 
@@ -30,7 +30,7 @@ def test_read_wav_file_stereo_channel():
     file_path = os.path.join(TEST_DIR, "44100_pcm16_stereo.wav")
     as1 = AudioSegment.from_file(file_path)
 
-    as2 = read_wav_file_np(file_path, 0)
+    as2 = read_wav_file(file_path, 0)
     assert as2 is not None
     assert len(as1._data) == len(as2)
 

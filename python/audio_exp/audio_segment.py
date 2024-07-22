@@ -11,7 +11,7 @@ except ImportError:
     # py3.13+ would not have audioop
     from .legacy_compatible import pyaudioop as audioop
 
-from audio_exp import read_wav_file_np, read_wav_file_metadata
+from audio_exp import read_wav_file, read_wav_file_metadata
 
 
 def db_to_float(db, using_amplitude=True):
@@ -117,7 +117,7 @@ class AudioSegment:
         sample_width = metadata.bits_per_sample // 8
 
         # TODO: support read frames by nframes
-        frames = read_wav_file_np(file_path, start_time)
+        frames = read_wav_file(file_path, start_time)
 
         obj = cls(
             data=frames,
