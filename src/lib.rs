@@ -3,7 +3,7 @@ use pyo3::exceptions::PyValueError;
 use log::info;
 
 use hound;
-use numpy::{IntoPyArray, PyArray1, PyArrayMethods};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArrayDyn};
 use pyo3::prelude::*;
 //use symphonia::core::sample;
 
@@ -84,8 +84,8 @@ fn py_read_wav_file_metadata(file_path: &str) -> PyResult<WavFileMeta> {
     Ok(read_wav_file_metadata(file_path).unwrap())
 }
 
-#[pyfunction]
-fn read_wav_file_np<'py>(
+#[pyfunction(name = "read_wav_file")]
+fn py_read_wav_file_np<'py>(
     py: Python<'py>,
     file_path: &str,
     starting_time_ms: u32,
@@ -134,21 +134,19 @@ fn read_wav_file(file_path: &str) -> Result<Vec<i16>, hound::Error> {
     Ok(samples)
 }
 
-#[pyfunction]
-fn write_wav_file_np<'py>(
+#[pyfunction(name = "write_wav_file")]
+fn py_write_wav_file_np<'py>(
     py: Python<'py>,
     file_path: &str,
     spec: &WavFileMeta,
-    samples: &Bound<'py, PyArray1<i16>>,
-) {
+    data: PyReadonlyArrayDyn<'py, i16>,
+) -> PyResult<()> {
     info!("Writing WAV file: {}", file_path);
     let sample_format = if spec.sample_format_int {
         hound::SampleFormat::Int
     } else {
         hound::SampleFormat::Float
     };
-    let duration = spec.duration;
-    let length = spec.length;
 
     let wavspec = hound::WavSpec {
         bits_per_sample: spec.bits_per_sample,
@@ -159,21 +157,21 @@ fn write_wav_file_np<'py>(
     let mut writer = hound::WavWriter::create(file_path, wavspec).unwrap();
     info!("writer created");
 
-    // NOTE: do-able but let us see how to do this without goiong unsafe
-    let samples_array = unsafe { samples.as_array() };
-    samples_array.iter().for_each(|s| {
+    data.as_array().iter().for_each(|s| {
         writer.write_sample(*s).unwrap();
     });
 
     writer.finalize().unwrap();
-    info!("writer closed");
+
+    Ok(())
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn _lowlevel(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(read_wav_file_np, m)?)?;
+    m.add_function(wrap_pyfunction!(py_read_wav_file_np, m)?)?;
     m.add_function(wrap_pyfunction!(py_read_wav_file_metadata, m)?)?;
+    m.add_function(wrap_pyfunction!(py_write_wav_file_np, m)?)?;
     Ok(())
 }
 
